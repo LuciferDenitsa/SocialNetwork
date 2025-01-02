@@ -1,4 +1,5 @@
-﻿using SocialNetwork.DAL.Entities;
+﻿
+using SocialNetwork.DAL.Entities;
 using System.Collections.Generic;
 
 namespace SocialNetwork.DAL.Repositories
