@@ -5,16 +5,18 @@ using SocialNetwork.DAL.Repositories;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Text;
+using System.Linq;
 
 namespace SocialNetwork.BLL.Services
 {
     public class UserService
     {
+        MessageService messageService;
         IUserRepository userRepository;
         public UserService()
         {
             userRepository = new UserRepository();
+            messageService = new MessageService();
         }
 
         public void Register(UserRegistrationData userRegistrationData)
@@ -50,6 +52,7 @@ namespace SocialNetwork.BLL.Services
 
             if (this.userRepository.Create(userEntity) == 0)
                 throw new Exception();
+
         }
 
         public User Authenticate(UserAuthenticationData userAuthenticationData)
@@ -99,6 +102,10 @@ namespace SocialNetwork.BLL.Services
 
         private User ConstructUserModel(UserEntity userEntity)
         {
+            var incomingMessages = messageService.GetIncomingMessagesByUserId(userEntity.id);
+
+            var outgoingMessages = messageService.GetOutcomingMessagesByUserId(userEntity.id);
+
             return new User(userEntity.id,
                           userEntity.firstname,
                           userEntity.lastname,
@@ -106,7 +113,10 @@ namespace SocialNetwork.BLL.Services
                           userEntity.email,
                           userEntity.photo,
                           userEntity.favorite_movie,
-                          userEntity.favorite_book);
+                          userEntity.favorite_book,
+                          incomingMessages,
+                          outgoingMessages
+                          );
         }
     }
 }
