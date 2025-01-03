@@ -13,10 +13,12 @@ namespace SocialNetwork.BLL.Services
     {
         MessageService messageService;
         IUserRepository userRepository;
+        IFriendRepository friendRepository;
         public UserService()
         {
             userRepository = new UserRepository();
             messageService = new MessageService();
+            friendRepository = new FriendRepository();
         }
 
         public void Register(UserRegistrationData userRegistrationData)
@@ -99,12 +101,33 @@ namespace SocialNetwork.BLL.Services
             if (this.userRepository.Update(updatableUserEntity) == 0)
                 throw new Exception();
         }
+        public IEnumerable<User> GetFriendsByUserId(int userId)
+        {
+            return friendRepository.FindAllByUserId(userId)
+                    .Select(friendsEntity => FindById(friendsEntity.friend_id));
+        }
+        public void AddFriend(FriendAddingData addFriendData)
+        {
+            var findUserEntity = userRepository.FindByEmail(addFriendData.FriendEmail);
+            if (findUserEntity is null) throw new UserNotFoundException();
+
+            var friendEntity = new FriendEntity()
+            {
+                user_id = addFriendData.UserId,
+                friend_id = findUserEntity.id
+            };
+
+            if (this.friendRepository.Create(friendEntity) == 0)
+                throw new Exception();
+        }
 
         private User ConstructUserModel(UserEntity userEntity)
         {
             var incomingMessages = messageService.GetIncomingMessagesByUserId(userEntity.id);
 
             var outgoingMessages = messageService.GetOutcomingMessagesByUserId(userEntity.id);
+
+            var friends = GetFriendsByUserId(userEntity.id);
 
             return new User(userEntity.id,
                           userEntity.firstname,
@@ -115,8 +138,8 @@ namespace SocialNetwork.BLL.Services
                           userEntity.favorite_movie,
                           userEntity.favorite_book,
                           incomingMessages,
-                          outgoingMessages
-                          );
+                          outgoingMessages,
+                          friends);
         }
     }
 }
